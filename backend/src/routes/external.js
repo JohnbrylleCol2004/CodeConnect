@@ -47,7 +47,11 @@ router.get('/barcode/:barcode', requireAuth, async (req, res) => {
   const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleanBarcode)}.json`;
 
   try {
-    const data = await new Promise((resolve, reject) => {
+  if (process.env.FRESHFLOW_DEMO_API_FAILURE === '1') {
+    throw new Error('Simulated Open Food Facts API failure');
+  }
+
+  const data = await new Promise((resolve, reject) => {
       const request = https.get(
         url,
         {
