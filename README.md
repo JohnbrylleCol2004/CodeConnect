@@ -77,14 +77,17 @@ cd ../frontend && npm install
 
 ### 3. Running the Application
 
-For QR Ph E-Wallet checkout, add your PayMongo test keys to `backend/.env`:
+E-Wallet checkout uses local demo mode by default. It generates a QR code containing the sale reference and amount. Scan it to view those details, then press **Simulate Payment** to complete the sale, deduct stock, and open a receipt. No PayMongo account or real money is involved.
+
+To use PayMongo QR Ph later, set these values in `backend/.env`:
 
 ```env
+PAYMENT_MODE=paymongo
 PAYMONGO_SECRET_KEY=sk_test_your_secret_key
 PAYMONGO_PUBLIC_KEY=pk_test_your_public_key
 ```
 
-The backend creates a single-use QR Ph code for each E-Wallet sale. The cashier waits for PayMongo confirmation; only then does FreshFlow deduct stock and open the receipt. Use PayMongo test keys while testing. If PayMongo provides a `test_url`, the checkout shows a link to simulate payment. Do not scan and pay a test QR with a real wallet; PayMongo warns that it can process a real transaction. Cash checkout opens the receipt immediately after the sale succeeds. QR Ph requires a PayMongo account with the payment method enabled. A pending QR code normally expires after about 30 minutes.
+In PayMongo mode, the backend creates a single-use QR Ph code for each E-Wallet sale. FreshFlow waits for PayMongo confirmation before deducting stock and opening the receipt. If PayMongo provides a `test_url`, checkout shows a link to simulate payment. Do not scan and pay a test QR with a real wallet; PayMongo warns that it can process a real transaction. Cash checkout opens the receipt immediately after the sale succeeds.
 
 Open two terminal windows:
 

@@ -223,7 +223,10 @@ router.get('/:saleId/receipt', requireAuth, (req, res) => {
         cashier:       sale.cashier_name,
         totalAmount:   sale.total_amount,
         paymentStatus: sale.payment_status,
-        paymentMethod: db.prepare('SELECT 1 FROM QrPayments WHERE sale_id = ?').get(saleId) ? 'QR Ph' : 'In-store',
+        paymentMethod: (() => {
+          const qr = db.prepare('SELECT intent_id FROM QrPayments WHERE sale_id = ?').get(saleId);
+          return qr ? (qr.intent_id?.startsWith('demo_') ? 'Demo E-Wallet' : 'QR Ph') : 'In-store';
+        })(),
         createdAt:     sale.created_at,
         items
       }

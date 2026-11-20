@@ -46,7 +46,7 @@ export default function CheckoutPage() {
           setQrPayment(null);
           setBanner({ type: 'error', message: 'QR payment expired or failed. Start a new checkout.' });
         } else {
-          setQrPayment(prev => ({ ...prev, image: res.data.qrImage || prev.image, amount: res.data.amount, testUrl: res.data.testUrl || prev.testUrl }));
+          setQrPayment(prev => ({ ...prev, image: res.data.qrImage || prev.image, amount: res.data.amount, mode: res.data.mode, testUrl: res.data.testUrl || prev.testUrl }));
         }
       } catch (err) {
         if (active) setBanner({ type: 'pending', message: err.response?.data?.error || 'Could not verify payment. Retrying…' });
@@ -56,6 +56,25 @@ export default function CheckoutPage() {
     const timer = setInterval(checkStatus, 3000);
     return () => { active = false; clearInterval(timer); };
   }, [qrPayment?.saleId, navigate]);
+
+  const confirmDemoPayment = async () => {
+    if (!qrPayment || qrPayment.mode !== 'demo') return;
+    setProcessing(true);
+    setBanner(null);
+    try {
+      const res = await api.post(`/sales/qrph/${qrPayment.saleId}/confirm-demo`);
+      if (res.data.paymentStatus === 'SUCCESS') {
+        sessionStorage.removeItem('pendingQrSaleId');
+        setQrPayment(null);
+        setCart([]);
+        navigate(`/receipt/${res.data.saleId}`);
+      }
+    } catch (err) {
+      setBanner({ type: 'error', message: err.response?.data?.error || 'Could not complete demo payment.' });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   // ── Product Search ──────────────────────────────────────────────────────────
   const handleSearchChange = (e) => {
@@ -152,8 +171,8 @@ export default function CheckoutPage() {
 
       if (paymentMethod === 'EWALLET') {
         sessionStorage.setItem('pendingQrSaleId', saleId);
-        setQrPayment({ saleId, image: res.data.qrImage, amount: res.data.amount, testUrl: res.data.testUrl });
-        setBanner({ type: 'pending', message: 'Ask the customer to scan the QR code. Waiting for payment confirmation.' });
+        setQrPayment({ saleId, image: res.data.qrImage, amount: res.data.amount, mode: res.data.mode, testUrl: res.data.testUrl });
+        setBanner({ type: 'pending', message: res.data.mode === 'demo' ? 'Demo payment pending. Scan the QR to view sale details, then use Simulate Payment.' : 'Ask the customer to scan the QR code. Waiting for payment confirmation.' });
       } else if (res.data.sale?.payment_status === 'SUCCESS') {
         setCart([]);
         navigate(`/receipt/${saleId}`);
@@ -325,13 +344,21 @@ export default function CheckoutPage() {
       )}
       {qrPayment && (
         <div style={{ ...s.card, textAlign: 'center' }}>
-          <h2 style={{ color: '#1a5c38' }}>Scan to pay with QR Ph</h2>
+          <h2 style={{ color: '#1a5c38' }}>{qrPayment.mode === 'demo' ? 'Demo E-Wallet QR' : 'Scan to pay with QR Ph'}</h2>
           {qrPayment.image ? (
             <img src={qrPayment.image.startsWith('data:') ? qrPayment.image : `data:image/png;base64,${qrPayment.image}`} alt="PayMongo QR Ph payment code" style={{ width: 260, maxWidth: '100%' }} />
           ) : <p>Loading QR code…</p>}
-          <p>₱{Number(qrPayment.amount ?? cartTotal).toFixed(2)} · Waiting for payment confirmation</p>
+          <p>₱{Number(qrPayment.amount ?? cartTotal).toFixed(2)} · {qrPayment.mode === 'demo' ? 'Demo only — no money will move' : 'Waiting for payment confirmation'}</p>
+          {qrPayment.mode === 'demo' && (
+            <>
+              <p style={{ color: '#666', fontSize: 13 }}>Scanning this code shows sale details. It does not pay through a wallet app.</p>
+              <button onClick={confirmDemoPayment} disabled={processing} style={{ ...s.checkoutBtn, maxWidth: 320, background: processing ? '#aaa' : '#1a5c38' }}>
+                {processing ? 'Completing demo…' : 'Simulate Payment'}
+              </button>
+            </>
+          )}
           {qrPayment.testUrl && <p><a href={qrPayment.testUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5c38', textDecoration: 'underline' }}>Simulate payment in PayMongo test mode</a></p>}
-          <p style={{ color: '#666', fontSize: 13 }}>The QR code expires after about 30 minutes. Keep this page open until payment is confirmed.</p>
+          {qrPayment.mode === 'paymongo' && <p style={{ color: '#666', fontSize: 13 }}>The QR code expires after about 30 minutes. Keep this page open until payment is confirmed.</p>}
         </div>
       )}
 

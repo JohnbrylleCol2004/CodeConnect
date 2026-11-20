@@ -14,6 +14,7 @@ process.env.DB_PATH = path.join(dir, 'test.db');
 process.env.JWT_SECRET = 'test-secret';
 process.env.PAYMONGO_SECRET_KEY = 'sk_test_example';
 process.env.PAYMONGO_PUBLIC_KEY = 'pk_test_example';
+process.env.PAYMENT_MODE = 'paymongo';
 
 const { initDatabase, getDb } = require('../src/db/database');
 const qrphRoutes = require('../src/routes/qrph');
