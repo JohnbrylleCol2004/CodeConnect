@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS SaleItems (
   subtotal   REAL    NOT NULL CHECK(subtotal >= 0)
 );
 
+-- One PayMongo QR Ph intent per pending sale. SaleItems are recorded before
+-- payment, while stock is deducted only after PayMongo confirms success.
+CREATE TABLE IF NOT EXISTS QrPayments (
+  sale_id       TEXT PRIMARY KEY REFERENCES Sales(sale_id) ON DELETE CASCADE,
+  intent_id     TEXT UNIQUE,
+  amount_centavos INTEGER NOT NULL CHECK(amount_centavos >= 100),
+  created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
 -- ExpiryRisks
 CREATE TABLE IF NOT EXISTS ExpiryRisks (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -38,7 +38,7 @@ export default function ReceiptPage() {
     setLoading(true);
     api.get(`/sales/${saleId}/receipt`)
       .then((res) => {
-        setReceipt(res.data);
+        setReceipt(res.data.receipt);
         setError('');
       })
       .catch((err) => {
@@ -175,7 +175,7 @@ export default function ReceiptPage() {
     : '—';
 
   return (
-    <div style={s.page}>
+    <div className="receipt-page" style={s.page}>
       <div style={s.card}>
         {/* Header */}
         <div style={s.header}>
@@ -228,9 +228,9 @@ export default function ReceiptPage() {
                 <tr key={item.product_id || idx}>
                   <td style={s.td}>{item.name || item.productName || item.product_name || '—'}</td>
                   <td style={{ ...s.td, textAlign: 'center' }}>{qty}</td>
-                  <td style={{ ...s.td, textAlign: 'right' }}>${unitPrice.toFixed(2)}</td>
+                  <td style={{ ...s.td, textAlign: 'right' }}>₱{unitPrice.toFixed(2)}</td>
                   <td style={{ ...s.td, textAlign: 'right', fontWeight: '600' }}>
-                    ${subtotal.toFixed(2)}
+                    ₱{subtotal.toFixed(2)}
                   </td>
                 </tr>
               );
@@ -241,7 +241,7 @@ export default function ReceiptPage() {
         {/* Total */}
         <div style={s.totalSection}>
           <span style={s.totalLabel}>TOTAL</span>
-          <span style={s.totalAmount}>${parseFloat(total).toFixed(2)}</span>
+          <span style={s.totalAmount}>₱{parseFloat(total).toFixed(2)}</span>
         </div>
 
         <div style={s.divider} />
@@ -254,7 +254,8 @@ export default function ReceiptPage() {
         {/* Footer */}
         <div style={s.footer}>
           <div style={s.thankYou}>Thank you for shopping at FreshFlow!</div>
-          <button style={s.backBtn} onClick={() => navigate('/checkout')}>
+          <button className="receipt-action" style={{ ...s.backBtn, marginRight: 8 }} onClick={() => window.print()}>Print Receipt</button>
+          <button className="receipt-action" style={s.backBtn} onClick={() => navigate('/checkout')}>
             ← Back to Checkout
           </button>
         </div>

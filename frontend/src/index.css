@@ -4,3 +4,11 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; }
 input, select, textarea { font-family: inherit; }
+
+@media print {
+  nav, header, .receipt-action { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+  main > div { padding: 0 !important; min-height: 0 !important; }
+  .receipt-page { padding: 0 !important; min-height: 0 !important; background: white !important; }
+  .receipt-page > div { max-width: none !important; box-shadow: none !important; }
+}

@@ -124,10 +124,40 @@ function WasteReport() {
 
 // ─── EXPIRY TRENDS TAB ───────────────────────────────────────────────────────
 
+function TrendBars({ title, rows, valueKey, dateKey, color }) {
+  const max = Math.max(1, ...rows.map(row => Number(row[valueKey]) || 0));
+
+  return (
+    <section style={{ flex: '1 1 320px', minWidth: 0 }}>
+      <h3 style={{ color: DARK_GREEN, fontSize: 16, margin: '0 0 12px' }}>{title}</h3>
+      {rows.length === 0 ? (
+        <p style={{ color: '#777' }}>No activity in the last 14 days.</p>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'end', gap: 6, height: 150, borderBottom: '1px solid #ccc' }}>
+          {rows.map(row => {
+            const value = Number(row[valueKey]) || 0;
+            return (
+              <div key={row[dateKey]} title={`${row[dateKey]}: ${value}`} style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: '#555' }}>{value}</div>
+                <div style={{ height: `${Math.max(value ? 8 : 0, value / max * 110)}px`, background: color, borderRadius: '4px 4px 0 0' }} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {rows.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: 12, marginTop: 6 }}>
+          <span>{rows[0][dateKey]}</span><span>{rows[rows.length - 1][dateKey]}</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ExpiryTrends() {
-  const [data, setData]       = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
   const [fetchedAt, setFetchedAt] = useState(null);
 
   const fetchData = async () => {
@@ -137,7 +167,7 @@ function ExpiryTrends() {
       const res = await api.get('/reports/expiry-trends');
       setData(res.data);
       setFetchedAt(new Date());
-    } catch (e) {
+    } catch {
       setError('Failed to load expiry trends.');
     } finally {
       setLoading(false);
@@ -146,108 +176,63 @@ function ExpiryTrends() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Derive columns from first item when data is an array
-  const isArray = Array.isArray(data);
-  const columns  = isArray && data.length > 0 ? Object.keys(data[0]) : [];
-
-  // Risk distribution
-  const riskDist = isArray
-    ? data.reduce((acc, r) => {
-        if (r.risk_level) acc[r.risk_level] = (acc[r.risk_level] || 0) + 1;
-        return acc;
-      }, {})
-    : null;
+  const riskSummary = data?.riskSummary || [];
+  const atRiskProducts = data?.atRiskProducts || [];
+  const salesTrend = data?.salesTrend || [];
+  const alertTrend = Object.entries((data?.alertTrend || []).reduce((byDay, row) => {
+    byDay[row.alert_date] = (byDay[row.alert_date] || 0) + row.count;
+    return byDay;
+  }, {})).map(([alert_date, count]) => ({ alert_date, count }));
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ color: DARK_GREEN, margin: 0 }}>Expiry Trends</h2>
-        <button onClick={fetchData} style={{
-          background: DARK_GREEN, color: '#fff', border: 'none',
-          borderRadius: 6, padding: '8px 18px', fontSize: 14, cursor: 'pointer',
-        }}>↻ Refresh</button>
+        <button onClick={fetchData} style={{ background: DARK_GREEN, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 18px', fontSize: 14, cursor: 'pointer' }}>↻ Refresh</button>
       </div>
-
-      {fetchedAt && (
-        <p style={{ color: '#555', fontSize: 13, marginBottom: 16 }}>
-          Expiry Trends as of {fetchedAt.toLocaleString()}
-        </p>
-      )}
-
+      {fetchedAt && <p style={{ color: '#555', fontSize: 13 }}>As of {fetchedAt.toLocaleString()}</p>}
       {loading && <p style={{ color: '#888' }}>Loading…</p>}
-      {error   && <p style={{ color: 'red' }}>{error}</p>}
-
-      {!loading && !error && data !== null && (
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {!loading && !error && data && (
         <>
-          {/* Risk distribution badges */}
-          {riskDist && Object.keys(riskDist).length > 0 && (
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-              {Object.entries(riskDist).map(([level, count]) => {
-                const c = riskColors[level] || { background: '#e9ecef', color: '#333' };
-                return (
-                  <div key={level} style={{
-                    ...c, borderRadius: 8, padding: '8px 16px',
-                    fontWeight: 600, fontSize: 13,
-                  }}>
-                    {level}: {count}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {isArray ? (
-            data.length === 0 ? (
-              <p style={{ color: '#888', textAlign: 'center', padding: 40 }}>No expiry trend data found.</p>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-                  <thead>
-                    <tr style={{ background: DARK_GREEN, color: '#fff' }}>
-                      {columns.map(col => (
-                        <th key={col} style={{ padding: '10px 12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                          {col.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((row, i) => {
-                      const bg = i % 2 === 0 ? '#f9f9f9' : '#fff';
-                      return (
-                        <tr key={i} style={{ background: bg }}>
-                          {columns.map(col => {
-                            if (col === 'risk_level') {
-                              const c = riskColors[row[col]] || {};
-                              return (
-                                <td key={col} style={{ padding: '8px 12px' }}>
-                                  <span style={{ ...c, padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>
-                                    {row[col] ?? '—'}
-                                  </span>
-                                </td>
-                              );
-                            }
-                            const val = row[col];
-                            const display = val === null || val === undefined
-                              ? '—'
-                              : typeof val === 'object'
-                                ? JSON.stringify(val)
-                                : String(val);
-                            return <td key={col} style={{ padding: '8px 12px' }}>{display}</td>;
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )
+          <h3 style={{ color: DARK_GREEN, fontSize: 16 }}>Current batch risk</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+            {['LOW', 'MEDIUM', 'HIGH', 'EXPIRED'].map(level => {
+              const summary = riskSummary.find(row => row.risk_level === level);
+              return (
+                <div key={level} style={{ ...riskColors[level], borderRadius: 8, padding: '12px 16px', minWidth: 120 }}>
+                  <strong>{level}: {summary?.count || 0}</strong>
+                  <div style={{ fontSize: 12, marginTop: 4 }}>{summary?.total_qty || 0} units remaining</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', marginBottom: 30 }}>
+            <TrendBars title="Expiry alerts (last 14 days)" rows={alertTrend} valueKey="count" dateKey="alert_date" color="#e68642" />
+            <TrendBars title="Units sold (last 14 days)" rows={salesTrend} valueKey="units_sold" dateKey="sale_date" color={DARK_GREEN} />
+          </div>
+          <h3 style={{ color: DARK_GREEN, fontSize: 16 }}>Batches needing attention</h3>
+          {atRiskProducts.length === 0 ? (
+            <p style={{ color: '#777' }}>No medium, high, or expired risk batches.</p>
           ) : (
-            /* Non-array response: render as key-value pairs */
-            <div style={{ background: '#f9f9f9', borderRadius: 8, padding: 20 }}>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, whiteSpace: 'pre-wrap' }}>
-                {JSON.stringify(data, null, 2)}
-              </pre>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                <thead><tr style={{ background: DARK_GREEN, color: '#fff' }}>
+                  {['Product', 'Batch', 'Risk', 'Expiry', 'Units left', 'Days to sell'].map(label =>
+                    <th key={label} style={{ padding: '10px 12px', textAlign: 'left', whiteSpace: 'nowrap' }}>{label}</th>
+                  )}
+                </tr></thead>
+                <tbody>{atRiskProducts.map((row, index) => (
+                  <tr key={`${row.batch_number}-${index}`} style={{ background: index % 2 ? '#fff' : '#f9f9f9' }}>
+                    <td style={{ padding: '8px 12px' }}>{row.product_name}</td>
+                    <td style={{ padding: '8px 12px' }}>{row.batch_number}</td>
+                    <td style={{ padding: '8px 12px' }}><span style={{ ...riskColors[row.risk_level], padding: '2px 8px', borderRadius: 12 }}>{row.risk_level}</span></td>
+                    <td style={{ padding: '8px 12px' }}>{row.expiry_date}</td>
+                    <td style={{ padding: '8px 12px' }}>{row.remaining_quantity}</td>
+                    <td style={{ padding: '8px 12px' }}>{row.days_to_sell == null ? 'No sales yet' : row.days_to_sell}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
             </div>
           )}
         </>

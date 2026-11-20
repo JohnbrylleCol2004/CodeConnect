@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
@@ -20,8 +20,42 @@ export default function CheckoutPage() {
 
   const [banner, setBanner] = useState(null); // { type: 'success'|'error'|'pending', message, saleId? }
   const [processing, setProcessing] = useState(false);
+  const [qrPayment, setQrPayment] = useState(null);
 
   const searchTimeout = useRef(null);
+
+  useEffect(() => {
+    const saleId = sessionStorage.getItem('pendingQrSaleId');
+    if (saleId) setQrPayment({ saleId });
+  }, []);
+
+  useEffect(() => {
+    if (!qrPayment?.saleId) return;
+    let active = true;
+    const checkStatus = async () => {
+      try {
+        const res = await api.get(`/sales/qrph/${qrPayment.saleId}/status`);
+        if (!active) return;
+        if (res.data.paymentStatus === 'SUCCESS') {
+          sessionStorage.removeItem('pendingQrSaleId');
+          setCart([]);
+          setQrPayment(null);
+          navigate(`/receipt/${qrPayment.saleId}`);
+        } else if (res.data.paymentStatus === 'REJECTED') {
+          sessionStorage.removeItem('pendingQrSaleId');
+          setQrPayment(null);
+          setBanner({ type: 'error', message: 'QR payment expired or failed. Start a new checkout.' });
+        } else {
+          setQrPayment(prev => ({ ...prev, image: res.data.qrImage || prev.image, amount: res.data.amount, testUrl: res.data.testUrl || prev.testUrl }));
+        }
+      } catch (err) {
+        if (active) setBanner({ type: 'pending', message: err.response?.data?.error || 'Could not verify payment. Retrying…' });
+      }
+    };
+    checkStatus();
+    const timer = setInterval(checkStatus, 3000);
+    return () => { active = false; clearInterval(timer); };
+  }, [qrPayment?.saleId, navigate]);
 
   // ── Product Search ──────────────────────────────────────────────────────────
   const handleSearchChange = (e) => {
@@ -89,18 +123,18 @@ export default function CheckoutPage() {
 
   // ── Checkout ────────────────────────────────────────────────────────────────
   const handleCheckout = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || qrPayment) return;
     setBanner(null);
     setProcessing(true);
 
     const user = getUser();
     const saleId = crypto.randomUUID();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), paymentMethod === 'EWALLET' ? 35000 : 10000);
 
     try {
       const res = await api.post(
-        '/sales/checkout',
+        paymentMethod === 'EWALLET' ? '/sales/qrph' : '/sales/checkout',
         {
           saleId,
           cashierId: user?.id,
@@ -116,22 +150,20 @@ export default function CheckoutPage() {
       );
       clearTimeout(timeoutId);
 
-      const status =
-        res.data?.status ||
-        res.data?.paymentStatus ||
-        res.data?.payment_status ||
-        'SUCCESS';
-
-      if (status === 'PENDING') {
-        setBanner({ type: 'pending', message: 'Payment pending. Check with cashier.' });
-      } else {
-        setBanner({ type: 'success', saleId: res.data?.saleId || saleId });
+      if (paymentMethod === 'EWALLET') {
+        sessionStorage.setItem('pendingQrSaleId', saleId);
+        setQrPayment({ saleId, image: res.data.qrImage, amount: res.data.amount, testUrl: res.data.testUrl });
+        setBanner({ type: 'pending', message: 'Ask the customer to scan the QR code. Waiting for payment confirmation.' });
+      } else if (res.data.sale?.payment_status === 'SUCCESS') {
         setCart([]);
+        navigate(`/receipt/${saleId}`);
+      } else {
+        setBanner({ type: 'pending', message: 'Checkout is pending. Do not process the cart again until its status is resolved.' });
       }
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError' || err.name === 'CanceledError') {
-        setBanner({ type: 'error', message: 'Request timed out. Please try again.' });
+        setBanner({ type: 'error', message: paymentMethod === 'EWALLET' ? 'QR request timed out. Check PayMongo before starting another payment.' : 'Request timed out. Please try again.' });
       } else {
         setBanner({
           type: 'error',
@@ -225,13 +257,13 @@ export default function CheckoutPage() {
     checkoutBtn: {
       marginTop: '16px',
       padding: '13px 28px',
-      background: cart.length === 0 || processing ? '#aaa' : '#1a5c38',
+      background: cart.length === 0 || processing || qrPayment ? '#aaa' : '#1a5c38',
       color: '#fff',
       border: 'none',
       borderRadius: '8px',
       fontSize: '16px',
       fontWeight: '700',
-      cursor: cart.length === 0 || processing ? 'not-allowed' : 'pointer',
+      cursor: cart.length === 0 || processing || qrPayment ? 'not-allowed' : 'pointer',
       width: '100%',
     },
     successBanner: {
@@ -291,6 +323,17 @@ export default function CheckoutPage() {
       {banner?.type === 'pending' && (
         <div style={s.pendingBanner}>⏳ {banner.message}</div>
       )}
+      {qrPayment && (
+        <div style={{ ...s.card, textAlign: 'center' }}>
+          <h2 style={{ color: '#1a5c38' }}>Scan to pay with QR Ph</h2>
+          {qrPayment.image ? (
+            <img src={qrPayment.image.startsWith('data:') ? qrPayment.image : `data:image/png;base64,${qrPayment.image}`} alt="PayMongo QR Ph payment code" style={{ width: 260, maxWidth: '100%' }} />
+          ) : <p>Loading QR code…</p>}
+          <p>₱{Number(qrPayment.amount ?? cartTotal).toFixed(2)} · Waiting for payment confirmation</p>
+          {qrPayment.testUrl && <p><a href={qrPayment.testUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5c38', textDecoration: 'underline' }}>Simulate payment in PayMongo test mode</a></p>}
+          <p style={{ color: '#666', fontSize: 13 }}>The QR code expires after about 30 minutes. Keep this page open until payment is confirmed.</p>
+        </div>
+      )}
 
       {/* Product Search */}
       <div style={s.card}>
@@ -299,6 +342,7 @@ export default function CheckoutPage() {
           type="text"
           value={searchQuery}
           onChange={handleSearchChange}
+          disabled={Boolean(qrPayment)}
           placeholder="Search by product name or barcode..."
           style={s.searchInput}
         />
@@ -318,14 +362,14 @@ export default function CheckoutPage() {
               <div
                 key={p.id}
                 style={s.resultItem}
-                onClick={() => addToCart(p)}
+                onClick={() => !qrPayment && addToCart(p)}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f9f4')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <span style={{ fontWeight: '600' }}>{p.name}</span>
                 <span style={{ color: '#888', fontSize: '13px' }}>{p.category}</span>
                 <span style={{ color: '#1a5c38', fontWeight: '700' }}>
-                  ${parseFloat(p.price ?? p.unit_price ?? 0).toFixed(2)}
+                  ₱{parseFloat(p.price ?? p.unit_price ?? 0).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -362,19 +406,21 @@ export default function CheckoutPage() {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
+                        disabled={Boolean(qrPayment)}
                         style={s.qtyInput}
                       />
                     </td>
                     <td style={{ ...s.td, textAlign: 'right' }}>
-                      ${item.unit_price.toFixed(2)}
+                      ₱{item.unit_price.toFixed(2)}
                     </td>
                     <td style={{ ...s.td, textAlign: 'right', fontWeight: '600' }}>
-                      ${item.subtotal.toFixed(2)}
+                      ₱{item.subtotal.toFixed(2)}
                     </td>
                     <td style={{ ...s.td, textAlign: 'center' }}>
                       <button
                         style={s.removeBtn}
                         onClick={() => removeFromCart(item.product_id)}
+                        disabled={Boolean(qrPayment)}
                       >
                         ✕
                       </button>
@@ -383,7 +429,7 @@ export default function CheckoutPage() {
                 ))}
               </tbody>
             </table>
-            <div style={s.totalRow}>Total: ${cartTotal.toFixed(2)}</div>
+            <div style={s.totalRow}>Total: ₱{cartTotal.toFixed(2)}</div>
           </>
         )}
       </div>
@@ -396,16 +442,17 @@ export default function CheckoutPage() {
             <button
               key={m}
               style={s.pmBtn(paymentMethod === m)}
-              onClick={() => setPaymentMethod(m)}
+              onClick={() => !qrPayment && setPaymentMethod(m)}
+              disabled={Boolean(qrPayment)}
             >
-              {m === 'CASH' ? '💵 Cash' : m === 'CARD' ? '💳 Card' : '📱 E-Wallet'}
+              {m === 'CASH' ? '💵 Cash' : m === 'CARD' ? '💳 Card' : '📱 E-Wallet QR Ph'}
             </button>
           ))}
         </div>
         <button
           style={s.checkoutBtn}
           onClick={handleCheckout}
-          disabled={cart.length === 0 || processing}
+          disabled={cart.length === 0 || processing || Boolean(qrPayment)}
         >
           {processing ? 'Processing…' : '✅ Process Checkout'}
         </button>

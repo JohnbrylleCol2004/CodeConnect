@@ -39,6 +39,9 @@ router.post('/checkout', requireAuth, validate(['saleId', 'items']), async (req,
   // ── Duplicate sale check ───────────────────────────────────────────────────
   const existing = db.prepare('SELECT id, payment_status FROM Sales WHERE sale_id = ?').get(saleId);
   if (existing) {
+    if (db.prepare('SELECT 1 FROM QrPayments WHERE sale_id = ?').get(saleId)) {
+      return res.status(409).json({ error: 'This sale has a QR payment; check its payment status instead', saleId });
+    }
     if (existing.payment_status === 'SUCCESS') {
       return res.status(409).json({ error: 'Duplicate sale – already processed', saleId });
     }
@@ -196,6 +199,9 @@ router.get('/:saleId/receipt', requireAuth, (req, res) => {
     if (!sale) {
       return res.status(404).json({ error: 'Sale not found' });
     }
+    if (sale.payment_status !== 'SUCCESS') {
+      return res.status(409).json({ error: 'Receipt is available after payment succeeds' });
+    }
 
     // Cashiers can only see their own receipts; managers see all
     if (req.user.role === 'cashier' && sale.cashier_id !== req.user.id) {
@@ -217,6 +223,7 @@ router.get('/:saleId/receipt', requireAuth, (req, res) => {
         cashier:       sale.cashier_name,
         totalAmount:   sale.total_amount,
         paymentStatus: sale.payment_status,
+        paymentMethod: db.prepare('SELECT 1 FROM QrPayments WHERE sale_id = ?').get(saleId) ? 'QR Ph' : 'In-store',
         createdAt:     sale.created_at,
         items
       }
