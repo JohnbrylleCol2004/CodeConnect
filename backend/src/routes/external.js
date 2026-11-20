@@ -15,7 +15,7 @@ function normalizeCategory(rawCategory = '', tags = []) {
 
   if (/milk|cheese|dairy|yogurt|yoghurt|butter|cream|lacto/.test(combined)) return 'Dairy';
   if (/bread|bakery|loaf|biscuit|pastry|cake|cookie|flour|toast/.test(combined)) return 'Bakery';
-  if (/beverage|drink|soda|cola|juice|tea|coffee|water|energy/.test(combined)) return 'Beverages';
+  if (/\b(?:beverages?|drinks?|sodas?|colas?|juices?|teas?|coffees?|waters?|energy)\b/.test(combined)) return 'Beverages';
   if (/snack|chip|crisp|chocolate|candy|sweet|popcorn|cracker/.test(combined)) return 'Snacks';
   if (/noodle|canned|soup|pasta|sauce|rice|grain|cereal|oil|spice/.test(combined)) return 'Pantry';
   if (/meat|poultry|chicken|pork|beef|fish|seafood/.test(combined)) return 'Meat & Seafood';
