@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FreshFlow POS - CodeConnect Revised Paper</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 25mm 25mm 25mm 25mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000000;
+      background: #ffffff;
+      margin: 0 auto;
+      padding: 40px;
+      max-width: 800px;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Times New Roman', Times, serif;
+      color: #000000;
+      font-weight: bold;
+      page-break-after: avoid;
+      margin-top: 1.4em;
+      margin-bottom: 0.5em;
+    }
+
+    h1 {
+      font-size: 16pt;
+      text-align: center;
+      margin-top: 0;
+    }
+
+    h2 {
+      font-size: 13pt;
+      margin-top: 1.5em;
+    }
+
+    h3 {
+      font-size: 12pt;
+    }
+
+    p {
+      text-align: justify;
+      margin-top: 0.6em;
+      margin-bottom: 0.6em;
+      color: #000000;
+    }
+
+    ul, ol {
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      padding-left: 28px;
+      color: #000000;
+    }
+
+    li {
+      margin-bottom: 0.3em;
+    }
+
+    .cover-page {
+      text-align: center;
+      page-break-after: always;
+      padding-top: 80px;
+      padding-bottom: 80px;
+    }
+
+    .cover-inst {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .cover-dept {
+      font-size: 11pt;
+      margin-bottom: 100px;
+    }
+
+    .cover-subject {
+      font-size: 16pt;
+      font-weight: bold;
+      letter-spacing: 1px;
+      line-height: 1.4;
+      margin-bottom: 80px;
+    }
+
+    .cover-title {
+      font-size: 15pt;
+      font-weight: bold;
+      margin-bottom: 50px;
+    }
+
+    .cover-prepared {
+      font-size: 12pt;
+      line-height: 1.8;
+      margin-bottom: 60px;
+    }
+
+    .cover-section {
+      font-size: 12pt;
+      line-height: 1.8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 11pt;
+      color: #000000;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #000000;
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: top;
+      color: #000000;
+    }
+
+    th {
+      font-weight: bold;
+      background-color: #f2f2f2;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== COVER PAGE ==================== -->
+  <div class="cover-page">
+    <div class="cover-inst">FEU Institute of Technology</div>
+    <div class="cover-dept">COLLEGE OF ENGINEERING &bull; COLLEGE OF COMPUTER STUDIES</div>
+
+    <div style="font-size: 13pt; margin-bottom: 30px;">COLLEGE OF COMPUTER STUDIES</div>
+
+    <div class="cover-subject">
+      SYSTEMS INTEGRATION AND<br>
+      ARCHITECTURE 2
+    </div>
+
+    <div class="cover-title">
+      CodeConnect Revised Paper<br>
+      <span style="font-size: 13pt; font-weight: normal;">FreshFlow POS: Expiry-Aware Inventory and Waste Reduction System</span>
+    </div>
+
+    <div class="cover-prepared">
+      Prepared by:<br><br>
+      <strong>John Brylle A. Col</strong><br>
+      <strong>Katrina A. Zantua</strong>
+    </div>
+
+    <div class="cover-section">
+      Section TW41<br>
+      Professor: Ms. Jocelyn Tejada
+    </div>
+  </div>
+
+  <!-- ==================== TABLE OF CONTENTS ==================== -->
+  <div class="page-break"></div>
+  <h2>Table of Contents</h2>
+  <p><strong>1. Introduction</strong></p>
+  <p><strong>2. Business Context and Problem</strong></p>
+  <p><strong>3. Proposed System</strong></p>
+  <p><strong>4. Objectives and Scope</strong></p>
+  <p><strong>5. System Architecture and Workflow</strong></p>
+  <p><strong>6. Integration Points and Interface Rules</strong></p>
+  <p><strong>7. Expiry-Risk and Waste-Reduction Process</strong></p>
+  <p><strong>8. Security, Validation, Logging, and Versioning</strong></p>
+  <p><strong>9. Testing and Verification</strong></p>
+  <p><strong>10. Risks, Constraints, and Mitigation</strong></p>
+  <p><strong>11. Implementation Methodology</strong></p>
+  <p><strong>12. Expected Benefits and Limitations</strong></p>
+  <p><strong>13. Conclusion</strong></p>
+  <p><strong>14. References</strong></p>
+
+  <h2 style="margin-top: 30px;">Executive Summary</h2>
+  <p>
+    FreshFlow POS is a proposed web-based expiry-aware inventory and waste reduction system for retail convenience stores. Its main purpose is to help managers identify products that may expire before being sold.
+  </p>
+  <p>
+    The system connects checkout transactions, inventory records, product batches, expiry dates, sales movement, and manager alerts. It can classify products according to expiry risk, recommend actions such as prioritizing display or reviewing discounts, and record whether products were sold, discounted, removed, or wasted.
+  </p>
+  <p>
+    Checkout, receipts, payment status, and inventory updates serve as supporting functions. The main focus of FreshFlow POS is reducing product waste through expiry monitoring, FEFO stock rotation, manager approval, and waste-history reporting. The initial prototype will not replace external payment, accounting, payroll, procurement, or existing POS systems.
+  </p>
+
+  <!-- ==================== 1. INTRODUCTION ==================== -->
+  <h2>1. Introduction</h2>
+  <p>
+    Retail convenience stores sell different types of products, including drinks, snacks, dairy products, ready-to-eat meals, and other goods with different expiry dates. Some products sell quickly, while others may remain on shelves for a longer period.
+  </p>
+  <p>
+    One major problem in this type of business is product waste. Products may expire because employees do not receive timely alerts, inventory records are inaccurate, or products with earlier expiry dates are not sold first.
+  </p>
+  <p>
+    A normal POS system records sales and deducts inventory. However, FreshFlow POS is designed to go further by connecting sales data with expiry monitoring and waste-reduction decisions.
+  </p>
+  <p>
+    When a product is sold, the system will update its quantity, identify the affected batch, check the expiry date, analyze sales movement, and determine whether manager attention is needed.
+  </p>
+
+  <h3>1.1 Purpose of the Proposal</h3>
+  <p>
+    The purpose of this proposal is to define a web-based system that helps a retail convenience store reduce avoidable product waste and improve inventory decisions.
+  </p>
+  <p>The system will support employees by providing:</p>
+  <ul>
+    <li>Accurate inventory updates</li>
+    <li>Product batch tracking</li>
+    <li>Expiry-date monitoring</li>
+    <li>Expiry-risk classification</li>
+    <li>Sales-movement information</li>
+    <li>Waste-reduction alerts</li>
+    <li>Manager-approved action recording</li>
+    <li>Waste-history reports</li>
+  </ul>
+
+  <h3>1.2 Project Direction</h3>
+  <p>FreshFlow POS will:</p>
+  <ul>
+    <li>Focus on expiry-aware inventory management.</li>
+    <li>Use checkout as a supporting function.</li>
+    <li>Track products by batch and expiry date.</li>
+    <li>Identify products at risk of expiring before being sold.</li>
+    <li>Provide alerts and recommended actions to managers.</li>
+    <li>Record the result of expiry-related actions.</li>
+    <li>Maintain one integrated web-based system.</li>
+    <li>Use one database as the central source of product, sales, inventory, and expiry information.</li>
+  </ul>
+
+  <!-- ==================== 2. BUSINESS CONTEXT ==================== -->
+  <h2>2. Business Context and Problem</h2>
+  <p>
+    Retail convenience stores must serve customers quickly while keeping product records accurate. Employees need to know the quantity available, which products are approaching expiry, which items are selling quickly, and which products may require action.
+  </p>
+  <p>When stores depend only on manual checking, several problems may occur:</p>
+  <ul>
+    <li>Employees may overlook products near expiry.</li>
+    <li>Products with later expiry dates may be sold before older batches.</li>
+    <li>Inventory quantities may not match actual shelf quantities.</li>
+    <li>Managers may not know which products are likely to become waste.</li>
+    <li>Discounts or product reviews may happen too late.</li>
+    <li>Wasted products may not be recorded correctly.</li>
+  </ul>
+
+  <h3>2.1 Operational Problems</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Problem</th>
+        <th style="width: 45%;">Operational Effect</th>
+        <th style="width: 30%;">Possible Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Missed expiry dates</td>
+        <td>Products remain on shelves without timely review.</td>
+        <td>Product waste and financial loss</td>
+      </tr>
+      <tr>
+        <td>No batch-level tracking</td>
+        <td>Employees cannot identify which products expire first.</td>
+        <td>Older products may remain unsold</td>
+      </tr>
+      <tr>
+        <td>Incorrect stock deduction</td>
+        <td>System quantity does not match actual quantity.</td>
+        <td>Incorrect inventory decisions</td>
+      </tr>
+      <tr>
+        <td>No sales-movement analysis</td>
+        <td>The store cannot determine whether products will sell before expiry.</td>
+        <td>Products may expire before being sold</td>
+      </tr>
+      <tr>
+        <td>Delayed manager action</td>
+        <td>Managers receive information only after a problem occurs.</td>
+        <td>Missed discount or display opportunities</td>
+      </tr>
+      <tr>
+        <td>Unrecorded waste</td>
+        <td>Removed or expired products are not documented.</td>
+        <td>Poor future ordering decisions</td>
+      </tr>
+      <tr>
+        <td>Manual monitoring</td>
+        <td>Employees depend on separate lists or visual checking.</td>
+        <td>Inconsistent and time-consuming work</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 Problem Statement</h3>
+  <p>
+    A retail convenience store needs a system that does more than record sales. It needs a system that connects checkout information with product batches, expiry dates, sales movement, and waste-reduction actions.
+  </p>
+  <p>Without this connection, the store may experience:</p>
+  <ul>
+    <li>Avoidable product waste</li>
+    <li>Incorrect inventory information</li>
+    <li>Missed near-expiry products</li>
+    <li>Poor stock rotation</li>
+    <li>Delayed management decisions</li>
+    <li>Inaccurate ordering decisions</li>
+    <li>Reduced profitability</li>
+  </ul>
+
+  <!-- ==================== 3. PROPOSED SYSTEM ==================== -->
+  <h2>3. Proposed System</h2>
+  <p>
+    FreshFlow POS is a web-based expiry-aware inventory and waste reduction system. It uses checkout transactions and inventory records to help managers identify products that may expire before being sold.
+  </p>
+  <p>
+    The system will provide ordinary POS functions, but these functions will support the main goal of reducing expiry-related waste.
+  </p>
+
+  <h3>3.1 Main System Functions</h3>
+  <p><strong>Checkout and Sales:</strong> The system records products purchased, quantities, prices, payment status, and receipt information. The sales record provides the data needed for inventory and sales-movement analysis.</p>
+  <p><strong>Inventory Monitoring:</strong> The system updates available quantities after a successful sale. It also records the batch affected by the transaction.</p>
+  <p><strong>Batch and Expiry Tracking:</strong> Each product batch has an expiry date and quantity. This allows the system to identify which products should be sold or reviewed first.</p>
+  <p><strong>Sales-Movement Analysis:</strong> The system analyzes how quickly a product is being sold. This information is compared with the product’s remaining shelf life.</p>
+  <p><strong>Expiry-Risk Classification:</strong> Products are classified as low risk, medium risk, high risk, or expired.</p>
+  <p><strong>Waste-Reduction Alerts:</strong> Managers receive alerts when products may expire before being sold.</p>
+  <p><strong>Manager Approval:</strong> Managers can approve or reject actions such as prioritizing display, discount review, or removal from sale.</p>
+  <p><strong>Waste History:</strong> The system records whether a product was sold normally, discounted, removed, or wasted.</p>
+
+  <h3>3.2 Main Unique Feature</h3>
+  <p>The main unique feature of FreshFlow POS is its expiry-risk and waste-reduction process.</p>
+  <p>The system will not only ask: <em>“How many products are left?”</em></p>
+  <p>It will also ask: <em>“Will these products likely be sold before they expire?”</em></p>
+  <p>
+    This makes the system more focused than a normal POS because it connects sales information with product expiry and waste prevention.
+  </p>
+
+  <!-- ==================== 4. OBJECTIVES AND SCOPE ==================== -->
+  <h2>4. Objectives and Scope</h2>
+
+  <h3>4.1 General Objective</h3>
+  <p>
+    To propose a web-based expiry-aware inventory and waste reduction system that uses checkout transactions, product batches, expiry dates, and sales movement to help a retail convenience store reduce product waste and improve inventory decisions.
+  </p>
+
+  <h3>4.2 Specific Objectives</h3>
+  <p>FreshFlow POS aims to:</p>
+  <ol>
+    <li>Record sales and inventory information in one transaction workflow.</li>
+    <li>Track products according to batch number and expiry date.</li>
+    <li>Deduct the correct quantity from the appropriate product batch.</li>
+    <li>Prioritize products with the earliest expiry date when applicable.</li>
+    <li>Classify products according to their expiry risk.</li>
+    <li>Analyze remaining stock and sales movement.</li>
+    <li>Identify products that may expire before being sold.</li>
+    <li>Notify managers about products that require attention.</li>
+    <li>Recommend waste-reduction actions for manager approval.</li>
+    <li>Record products that were sold, discounted, removed, or wasted.</li>
+    <li>Provide reports about expiry trends and product waste.</li>
+    <li>Apply authentication, authorization, HTTPS, validation, logging, and audit controls.</li>
+    <li>Prevent duplicate transactions using unique transaction IDs.</li>
+    <li>Test normal workflows, interface contracts, failure paths, and performance.</li>
+  </ol>
+
+  <h3>4.3 Scope of the Prototype</h3>
+  <p>The prototype includes:</p>
+  <ul>
+    <li>Browser-based cashier and manager screens</li>
+    <li>Product records</li>
+    <li>Product-batch records</li>
+    <li>Sale records</li>
+    <li>Inventory records</li>
+    <li>Payment-status records</li>
+    <li>Receipt records</li>
+    <li>Expiry-date tracking</li>
+    <li>Expiry-risk classification</li>
+    <li>Sales-movement monitoring</li>
+    <li>Near-expiry alerts</li>
+    <li>Waste-reduction recommendations</li>
+    <li>Manager approval of actions</li>
+    <li>Waste-history records</li>
+    <li>Manager reports</li>
+    <li>Authentication and role-based access</li>
+    <li>HTTPS communication</li>
+    <li>Server-side validation</li>
+    <li>Audit logging</li>
+    <li>Contract, interface, failure-path, and performance testing</li>
+  </ul>
+
+  <h3>4.4 Limitations of the Initial Scope</h3>
+  <p>The following are outside the initial prototype:</p>
+  <ul>
+    <li>Direct bank integration</li>
+    <li>Direct e-wallet integration</li>
+    <li>Payment-gateway replacement</li>
+    <li>Full accounting</li>
+    <li>Payroll</li>
+    <li>Automatic supplier procurement</li>
+    <li>Automatic price changes without approval</li>
+    <li>Full offline operation</li>
+    <li>Automatic deployment to all branches</li>
+    <li>Replacement of an existing POS</li>
+    <li>Hardware-specific barcode design</li>
+    <li>Automatic migration of historical records</li>
+  </ul>
+  <p>Payment processing will initially be represented using PENDING, SUCCESS, and REJECTED statuses.</p>
+
+  <!-- ==================== 5. SYSTEM ARCHITECTURE ==================== -->
+  <h2>5. System Architecture and Workflow</h2>
+
+  <h3>5.1 Architecture Overview</h3>
+  <p>FreshFlow POS will use a three-layer web application architecture.</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Layer</th>
+        <th style="width: 45%;">Responsibility</th>
+        <th style="width: 30%;">Examples</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Browser Interface</td>
+        <td>Receives user input and displays results.</td>
+        <td>Process sales, view alerts, review waste</td>
+      </tr>
+      <tr>
+        <td>Application Server</td>
+        <td>Validates data, applies business rules, and controls access.</td>
+        <td>Calculate risk, update inventory, create alerts</td>
+      </tr>
+      <tr>
+        <td>Database</td>
+        <td>Stores durable and traceable records.</td>
+        <td>Products, batches, sales, expiry dates, alerts</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    The application server will serve as the main control point for validation, authorization, transaction processing, expiry analysis, and alert generation.
+  </p>
+
+  <h3>5.2 Main System Workflow</h3>
+  <ol>
+    <li>The cashier signs in through the browser.</li>
+    <li>The system verifies the cashier’s identity and role.</li>
+    <li>The cashier scans or encodes the products.</li>
+    <li>The application server validates the product ID and quantity.</li>
+    <li>The system identifies the appropriate product batch.</li>
+    <li>The system calculates the transaction total.</li>
+    <li>The cashier selects a payment method.</li>
+    <li>The system records the payment status.</li>
+    <li>If payment is successful, the system records the sale.</li>
+    <li>The system deducts the quantity from the correct batch.</li>
+    <li>The system updates the remaining stock.</li>
+    <li>The system checks the affected batch’s expiry date.</li>
+    <li>The system analyzes the product’s sales movement.</li>
+    <li>The system calculates the product’s expiry risk.</li>
+    <li>The system creates an alert if action is required.</li>
+    <li>The system generates the receipt record.</li>
+    <li>The manager reviews and approves an action when necessary.</li>
+    <li>The system records the final action in the waste history.</li>
+  </ol>
+
+  <h3>5.3 Expiry-Aware Workflow</h3>
+  <p>The main process of FreshFlow POS is:</p>
+  <p style="text-align: center; font-weight: bold; margin: 15px 0;">
+    Sale recorded &rarr; inventory updated &rarr; batch identified &rarr; expiry checked &rarr; sales movement analyzed &rarr; risk level calculated &rarr; manager alerted &rarr; action approved &rarr; result recorded.
+  </p>
+
+  <h3>5.4 Transaction Consistency</h3>
+  <p>
+    A sale must not be considered fully completed unless the required transaction records are saved correctly.
+  </p>
+  <p>
+    If payment confirmation is incomplete, the sale must remain pending. If the inventory update fails after successful payment-status confirmation, the system must record the failure and mark the transaction for retry or manual review.
+  </p>
+
+  <!-- ==================== 6. INTEGRATION POINTS ==================== -->
+  <h2>6. Integration Points and Interface Rules</h2>
+
+  <h3>6.1 Integration Point Register</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Integration Point</th>
+        <th>Source</th>
+        <th>Destination</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Checkout Request</td>
+        <td>Browser</td>
+        <td>Application Server</td>
+        <td>Sends the transaction request.</td>
+      </tr>
+      <tr>
+        <td>Sale Record</td>
+        <td>Application Server</td>
+        <td>Database</td>
+        <td>Stores the completed transaction.</td>
+      </tr>
+      <tr>
+        <td>Inventory Update</td>
+        <td>Sales Module</td>
+        <td>Inventory Module</td>
+        <td>Deducts the sold quantity.</td>
+      </tr>
+      <tr>
+        <td>Batch Lookup</td>
+        <td>Inventory Module</td>
+        <td>Batch Database</td>
+        <td>Identifies the correct product batch.</td>
+      </tr>
+      <tr>
+        <td>Expiry-Risk Calculation</td>
+        <td>Inventory Module</td>
+        <td>Expiry-Risk Module</td>
+        <td>Determines the product’s risk level.</td>
+      </tr>
+      <tr>
+        <td>Alert Generation</td>
+        <td>Expiry-Risk Module</td>
+        <td>Alert Module</td>
+        <td>Notifies the manager.</td>
+      </tr>
+      <tr>
+        <td>Manager Approval</td>
+        <td>Manager Interface</td>
+        <td>Application Server</td>
+        <td>Approves or rejects a recommended action.</td>
+      </tr>
+      <tr>
+        <td>Waste History</td>
+        <td>Application Server</td>
+        <td>Database</td>
+        <td>Records the final result.</td>
+      </tr>
+      <tr>
+        <td>Reporting</td>
+        <td>Database</td>
+        <td>Manager Interface</td>
+        <td>Displays management information.</td>
+      </tr>
+      <tr>
+        <td>External Barcode Lookup</td>
+        <td>Application Server</td>
+        <td>Open Food Facts Global API</td>
+        <td>Auto-resolves product names, brands, and categories via EAN/UPC barcode lookup.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 Data Format and Semantic Rules</h3>
+  <p>
+    FreshFlow POS will use JSON objects for internal data exchange, following standard JSON formatting rules (Bray, 2017).
+  </p>
+  <p>Important fields include: <code>productId</code>, <code>saleId</code>, <code>batchId</code>, <code>expiryDate</code>, <code>quantity</code>, <code>remainingQuantity</code>, <code>salesRate</code>, <code>riskLevel</code>, <code>recommendedAction</code>, <code>paymentStatus</code>, and <code>wasteStatus</code>.</p>
+  
+  <p><strong>Data Semantic Rules:</strong></p>
+  <ul>
+    <li><code>productId</code> identifies one registered product.</li>
+    <li><code>saleId</code> identifies one unique transaction.</li>
+    <li><code>batchId</code> identifies one product batch.</li>
+    <li><code>quantity</code> means the number of individual sellable units.</li>
+    <li><code>unitPrice</code> means the price of one sellable unit.</li>
+    <li><code>totalAmount</code> means the total transaction value in Philippine pesos.</li>
+    <li><code>expiryDate</code> uses the format YYYY-MM-DD.</li>
+    <li><code>salesRate</code> represents the average units sold during the monitoring period.</li>
+    <li><code>riskLevel</code> may be LOW, MEDIUM, HIGH, or EXPIRED.</li>
+    <li><code>paymentStatus</code> may be PENDING, SUCCESS, or REJECTED.</li>
+    <li><code>wasteStatus</code> may be NOT_WASTED, DISCOUNTED, REMOVED, or WASTED.</li>
+  </ul>
+
+  <h3>6.3 First-Expiry, First-Out Rule</h3>
+  <p>
+    FreshFlow POS will follow the First-Expiry, First-Out or FEFO rule. This means the product batch with the earliest expiry date should be prioritized before batches that expire later.
+  </p>
+  <p>
+    FEFO is appropriate for products with expiry dates because it focuses on the actual expiry date instead of only the date when the product arrived. This helps reduce waste caused by expired stock (World Health Organization, n.d.).
+  </p>
+
+  <h3>6.4 Timeout and Retry Rules</h3>
+  <p>The checkout request will be processed synchronously. The proposed rules are:</p>
+  <ul>
+    <li>A normal checkout request should respond within 10 seconds.</li>
+    <li>If there is no response within 10 seconds, the transaction becomes PENDING.</li>
+    <li>A pending transaction must not automatically become successful.</li>
+    <li>Each transaction must use a unique saleId.</li>
+    <li>The system must check whether the saleId was already processed.</li>
+    <li>Failed inventory updates may be retried up to three times.</li>
+    <li>Retry delays will use approximately 2-second, 4-second, and 8-second intervals.</li>
+    <li>After the final failed retry, the system must record the failure and notify the responsible user.</li>
+  </ul>
+
+  <h3>6.5 Versioning Strategy</h3>
+  <p>
+    The first system interface will be identified as Version 1, or v1. Changes to required fields, data types, status values, or business rules must be documented. Major changes will receive a new version number, such as v2.
+  </p>
+
+  <!-- ==================== 7. EXPIRY-RISK PROCESS ==================== -->
+  <h2>7. Expiry-Risk and Waste-Reduction Process</h2>
+
+  <h3>7.1 Expiry-Risk Classification</h3>
+  <p>The system will examine: number of days before expiry, current remaining quantity, average sales movement, product category, batch information, and previous waste history.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Risk Level</th>
+        <th>Condition</th>
+        <th>Suggested Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Low</strong></td>
+        <td>More than 30 days before expiry</td>
+        <td>Continue normal monitoring</td>
+      </tr>
+      <tr>
+        <td><strong>Medium</strong></td>
+        <td>8 to 30 days before expiry</td>
+        <td>Review product movement</td>
+      </tr>
+      <tr>
+        <td><strong>High</strong></td>
+        <td>1 to 7 days before expiry</td>
+        <td>Prioritize display or request manager action</td>
+      </tr>
+      <tr>
+        <td><strong>Expired</strong></td>
+        <td>Past the expiry date</td>
+        <td>Remove from sale and record the reason</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>The store may adjust the number of days according to product category and management policy.</p>
+
+  <h3>7.2 Example Scenario</h3>
+  <p>
+    A product has 20 units remaining, three days before expiry, and an average sales rate of two units per day. The system may classify the product as high risk because the remaining stock is greater than the estimated number of units that can be sold before expiry.
+  </p>
+  <p>The system may recommend that the manager:</p>
+  <ul>
+    <li>Prioritize the product for display.</li>
+    <li>Review an approved discount.</li>
+    <li>Check whether the product information is accurate.</li>
+    <li>Remove the product if it has already expired.</li>
+  </ul>
+
+  <h3>7.3 Manager Approval</h3>
+  <p>
+    The system will not automatically apply discounts or remove products without authorization. A manager must approve the recommended action. The system will record: Manager ID, Date and time, Product ID, Batch ID, Quantity affected, Action selected, Reason, and Result.
+  </p>
+
+  <h3>7.4 Waste History and Reports</h3>
+  <p>The system will record whether the product was: sold normally, discounted, removed from sale, returned according to store policy, or recorded as wasted.</p>
+  <p>Reports may include:</p>
+  <ul>
+    <li>Products with the highest expiry risk</li>
+    <li>Products frequently wasted</li>
+    <li>Products frequently discounted</li>
+    <li>Waste quantity by product</li>
+    <li>Waste quantity by category</li>
+    <li>Near-expiry products successfully sold</li>
+    <li>Average time between alert and action</li>
+    <li>Estimated inventory value lost through expiry</li>
+  </ul>
+
+  <!-- ==================== 8. SECURITY ==================== -->
+  <h2>8. Security and Data Protection</h2>
+
+  <h3>8.1 Authentication and Authorization</h3>
+  <p>Users must sign in before accessing FreshFlow POS.</p>
+  <p><strong>Cashiers may:</strong> process sales, view product information, view transaction status, and generate receipts.</p>
+  <p><strong>Managers may:</strong> view expiry-risk information, view waste reports, approve discounts or product removal, review stock and sales reports, review audit records, and approve authorized corrections.</p>
+  <p>
+    Users may only perform actions allowed by their assigned role. Authentication and account-management controls should follow recognized digital identity practices (National Institute of Standards and Technology, 2025).
+  </p>
+
+  <h3>8.2 Transport Protection and Input Validation</h3>
+  <p>
+    All browser-to-server communication must use HTTPS. Sensitive user and transaction information must not be transmitted through unprotected communication (OWASP Foundation, 2025).
+  </p>
+  <p>The application server must validate every request to verify that:</p>
+  <ul>
+    <li>Required fields are present.</li>
+    <li>Product IDs exist.</li>
+    <li>Batch IDs belong to the selected product.</li>
+    <li>Quantities are positive and do not exceed available stock.</li>
+    <li>Prices and totals are not negative.</li>
+    <li>Expiry dates use the correct format.</li>
+    <li>Payment statuses and risk levels are valid.</li>
+    <li>The sale ID has not already been processed.</li>
+    <li>The user is authorized to perform the action.</li>
+  </ul>
+  <p>Invalid requests must be rejected and logged.</p>
+
+  <h3>8.3 Logging and Auditability</h3>
+  <p>
+    The system will create audit records for: successful sales, inventory deductions, batch changes, risk-level changes, alert creation, manager approvals, discount approvals, product removals, waste records, rejected transactions, failed login attempts, authorization failures, timeout events, retry attempts, and system errors.
+  </p>
+  <p>
+    Each log should include the event ID, user ID, role, date and time, action, affected record, result, and error information when applicable. Logs must be protected from unauthorized editing. Access must be limited to authorized managers or administrators.
+  </p>
+
+  <h3>8.4 Performance Requirements</h3>
+  <p>The initial prototype will be designed for:</p>
+  <ul>
+    <li>Approximately 10 concurrent users</li>
+    <li>Approximately 30 completed transactions per minute during peak activity</li>
+    <li>2-second response time for common cashier actions</li>
+    <li>5-second target for normal checkout</li>
+    <li>5-second target for manager reports using prototype data</li>
+  </ul>
+
+  <!-- ==================== 9. TESTING ==================== -->
+  <h2>9. Testing and Verification</h2>
+  <p>
+    Testing will verify the normal operation, integration points, expiry-risk process, security controls, and failure behavior of FreshFlow POS. Integration testing will focus on interactions between system components, while contract testing will verify that exchanged data follows the agreed rules (International Software Testing Qualifications Board, n.d.).
+  </p>
+
+  <h3>9.1 Test Plan</h3>
+  <!-- Deduplicated and unified single test table -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Test</th>
+        <th style="width: 43%;">Example / Input</th>
+        <th style="width: 35%;">Expected Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Unit Test</td>
+        <td>Calculate days before expiry.</td>
+        <td>Correct risk period is calculated.</td>
+      </tr>
+      <tr>
+        <td>Unit Test</td>
+        <td>Calculate product sales movement.</td>
+        <td>The result matches the recorded sales data.</td>
+      </tr>
+      <tr>
+        <td>Integration Test</td>
+        <td>Complete a sale and inspect inventory.</td>
+        <td>Stock decreases from the correct batch.</td>
+      </tr>
+      <tr>
+        <td>Contract Test</td>
+        <td>Validate required transaction fields / submit missing fields.</td>
+        <td>Invalid request is rejected.</td>
+      </tr>
+      <tr>
+        <td>Interface Test</td>
+        <td>Send a valid checkout request.</td>
+        <td>The application server returns the correct response.</td>
+      </tr>
+      <tr>
+        <td>FEFO Test</td>
+        <td>Sell a product with multiple batches.</td>
+        <td>The earliest-expiring batch is prioritized.</td>
+      </tr>
+      <tr>
+        <td>Expiry Test</td>
+        <td>Set a batch within the warning period.</td>
+        <td>The correct risk level and alert are created.</td>
+      </tr>
+      <tr>
+        <td>Waste Test</td>
+        <td>Approve a product-removal action.</td>
+        <td>The action is recorded in waste history.</td>
+      </tr>
+      <tr>
+        <td>Authorization Test</td>
+        <td>Cashier attempts manager approval.</td>
+        <td>The request is rejected.</td>
+      </tr>
+      <tr>
+        <td>Duplicate Test</td>
+        <td>Submit the same sale ID twice.</td>
+        <td>The second transaction is not duplicated.</td>
+      </tr>
+      <tr>
+        <td>Timeout Test</td>
+        <td>Delay the server response past 10 seconds.</td>
+        <td>The transaction becomes pending.</td>
+      </tr>
+      <tr>
+        <td>Failure Test</td>
+        <td>Interrupt the inventory update.</td>
+        <td>The error is logged and marked for retry.</td>
+      </tr>
+      <tr>
+        <td>Performance Test</td>
+        <td>Simulate 10 users and 30 transactions per minute.</td>
+        <td>The system is evaluated against performance targets.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>9.2 Verification Conditions</h3>
+  <p>The system should verify that:</p>
+  <ul>
+    <li>A valid sale deducts the correct quantity.</li>
+    <li>The earliest-expiring batch is selected.</li>
+    <li>Near-expiry products receive the correct risk level.</li>
+    <li>High-risk products create alerts.</li>
+    <li>Manager-approved actions are recorded.</li>
+    <li>Expired products are removed from sale.</li>
+    <li>Invalid requests are rejected.</li>
+    <li>Duplicate sales are prevented.</li>
+    <li>Unauthorized actions are blocked.</li>
+    <li>Failed updates are marked for retry or review.</li>
+  </ul>
+  <p>
+    Each test must record the test ID, objective, preconditions, input data, expected result, actual result, pass or fail status, date, responsible person, and defect reference.
+  </p>
+
+  <!-- ==================== 10. RISKS ==================== -->
+  <h2>10. Risks, Constraints, and Mitigation</h2>
+  <!-- Cleaned singular risk table (fixed original typo 'sk' and duplicated rows) -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 28%;">Risk</th>
+        <th style="width: 36%;">Possible Effect</th>
+        <th style="width: 36%;">Mitigation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Incorrect expiry date</td>
+        <td>Wrong risk classification</td>
+        <td>Validate dates and require authorized corrections</td>
+      </tr>
+      <tr>
+        <td>Wrong batch selected</td>
+        <td>Older products may remain unsold</td>
+        <td>Use batch IDs and FEFO</td>
+      </tr>
+      <tr>
+        <td>Duplicate transaction</td>
+        <td>Stock may be deducted twice</td>
+        <td>Use unique sale IDs and controlled retries</td>
+      </tr>
+      <tr>
+        <td>Network interruption</td>
+        <td>Transaction may remain incomplete</td>
+        <td>Use pending status and timeout rules</td>
+      </tr>
+      <tr>
+        <td>Unauthorized discount</td>
+        <td>Product price may be changed improperly</td>
+        <td>Require manager approval and audit logging</td>
+      </tr>
+      <tr>
+        <td>Unauthorized product removal</td>
+        <td>Saleable stock may be removed</td>
+        <td>Use role-based authorization</td>
+      </tr>
+      <tr>
+        <td>Incorrect sales movement</td>
+        <td>Risk calculation may be inaccurate</td>
+        <td>Validate sales records</td>
+      </tr>
+      <tr>
+        <td>Alert overload</td>
+        <td>Employees may ignore alerts</td>
+        <td>Use priority levels and clear actions</td>
+      </tr>
+      <tr>
+        <td>Database failure</td>
+        <td>Recent records may be unavailable</td>
+        <td>Use backups, logging, and recovery procedures</td>
+      </tr>
+      <tr>
+        <td>Existing-system incompatibility</td>
+        <td>Deployment may be delayed</td>
+        <td>Conduct compatibility assessment</td>
+      </tr>
+      <tr>
+        <td>External payment downtime</td>
+        <td>Payment may remain pending</td>
+        <td>Keep external payment outside the prototype</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== 11. IMPLEMENTATION METHODOLOGY ==================== -->
+  <h2>11. Implementation Methodology</h2>
+  <p>The team will use short development cycles.</p>
+
+  <!-- Fixed original typo 'print Main Work' to 'Sprint | Main Work' -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Sprint</th>
+        <th style="width: 75%;">Main Work</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sprint 1</strong></td>
+        <td>Define product, batch, sale, expiry, risk, alert, waste, and user records.</td>
+      </tr>
+      <tr>
+        <td><strong>Sprint 2</strong></td>
+        <td>Build authentication, product records, batch records, and basic checkout.</td>
+      </tr>
+      <tr>
+        <td><strong>Sprint 3</strong></td>
+        <td>Add inventory deduction, FEFO processing, and receipt records.</td>
+      </tr>
+      <tr>
+        <td><strong>Sprint 4</strong></td>
+        <td>Add expiry-risk classification, sales movement, and alerts.</td>
+      </tr>
+      <tr>
+        <td><strong>Sprint 5</strong></td>
+        <td>Add manager approval, waste history, logging, versioning, and failure handling.</td>
+      </tr>
+      <tr>
+        <td><strong>Sprint 6</strong></td>
+        <td>Conduct performance testing, fix defects, and prepare the final demonstration.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== 12. EXPECTED BENEFITS ==================== -->
+  <h2>12. Expected Benefits and Limitations</h2>
+
+  <h3>12.1 Expected Benefits</h3>
+  <p>FreshFlow POS is expected to provide the following benefits:</p>
+  <ul>
+    <li>Reduced product waste</li>
+    <li>Improved inventory accuracy</li>
+    <li>Better stock rotation</li>
+    <li>Earlier manager awareness</li>
+    <li>More informed ordering decisions</li>
+    <li>Recorded accountability for product actions</li>
+    <li>Less manual monitoring</li>
+    <li>Better visibility of expiry-related problems</li>
+    <li>More reliable system processing</li>
+  </ul>
+  <p>
+    The system supports the broader goal of reducing food waste through improved measurement, monitoring, and early action (United Nations Environment Programme, 2024).
+  </p>
+
+  <h3>12.2 Limitations</h3>
+  <p>
+    FreshFlow POS cannot completely eliminate product waste. Employees must still encode correct expiry dates, follow stock-rotation procedures, review alerts, and perform approved actions.
+  </p>
+  <p>
+    The system will not guarantee that every product is sold before expiry. It will provide information, risk classifications, and recommendations that help employees act earlier.
+  </p>
+  <p>
+    The initial version will not provide full offline operation. It will depend on access to the web application and database. The system will not initially replace bank, e-wallet, accounting, payroll, procurement, or existing POS systems. The system must undergo a pilot test before being deployed to multiple branches.
+  </p>
+
+  <!-- ==================== 13. CONCLUSION ==================== -->
+  <h2>13. Conclusion</h2>
+  <p>
+    FreshFlow POS is a proposed web-based expiry-aware inventory and waste reduction system designed for retail convenience stores.
+  </p>
+  <p>
+    Although the system includes common POS features such as checkout, inventory updates, receipt generation, and reporting, these are supporting functions. The main focus is to connect sales data with product batches, expiry dates, sales movement, risk classification, manager alerts, and waste-history records.
+  </p>
+  <p>
+    The system can identify products that may expire before being sold and help managers take action earlier. It can prioritize products with earlier expiry dates, provide expiry-risk classifications, recommend manager-approved actions, and record the final result.
+  </p>
+  <p>
+    The revised design also defines integration points, data meanings, FEFO rules, timeout behavior, retries, versioning, authentication, authorization, HTTPS protection, validation, audit logging, testing, performance requirements, and system limitations.
+  </p>
+  <p>
+    FreshFlow POS provides a focused solution to a specific retail problem: reducing product waste through better expiry and inventory management. The recommended prototype should begin with product and batch records, checkout, inventory deduction, expiry-risk classification, alerts, manager approval, and waste-history reporting.
+  </p>
+
+  <!-- ==================== 14. REFERENCES ==================== -->
+  <h2>14. Project References</h2>
+  <p>
+    Bray, T. (2017). <em>The JavaScript Object Notation (JSON) data interchange format (RFC 8259).</em> Internet Engineering Task Force. https://doi.org/10.17487/RFC8259
+  </p>
+  <p>
+    Food and Agriculture Organization of the United Nations. (n.d.). <em>Food loss and food waste database.</em> Retrieved October 17, 2026, from https://www.fao.org/policy-support/policy-themes/food-loss-and-food-waste/-Food-Loss-and-Food-Waste-Database/en
+  </p>
+  <p>
+    International Organization for Standardization. (2023). <em>ISO/IEC 25010:2023: Systems and software engineering&mdash;Systems and software quality requirements and evaluation (SQuaRE)&mdash;Product quality model.</em> https://www.iso.org/standard/78176.html
+  </p>
+  <p>
+    International Software Testing Qualifications Board. (n.d.). <em>Integration testing.</em> ISTQB Glossary. Retrieved October 17, 2026, from https://glossary.istqb.org/en_US/term/integration-testing
+  </p>
+  <p>
+    National Institute of Standards and Technology. (2025). <em>Digital identity guidelines: Authentication and authenticator management (NIST Special Publication 800-63B-4).</em> https://doi.org/10.6028/NIST.SP.800-63b-4
+  </p>
+  <p>
+    OWASP Foundation. (2025). <em>OWASP Top 10: The standard awareness document for developers and web application security.</em> https://owasp.org/projects/top-ten
+  </p>
+  <p>
+    United Nations Environment Programme. (2024). <em>Food waste index report 2024.</em> https://www.unep.org/resources/publication/food-waste-index-report-2024
+  </p>
+  <p>
+    World Health Organization. (n.d.). <em>Warehouse and stock management: First expiry, first out and first in, first out principles.</em> Retrieved October 17, 2026, from https://emanual.who.int/p17new/s09/Pages/9-3-4-Warehouse-and-Stock-Management.aspx
+  </p>
+
+</body>
+</html>

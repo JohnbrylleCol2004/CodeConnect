@@ -1,0 +1,23 @@
+{
+  "name": "freshflow-pos",
+  "version": "1.0.0",
+  "description": "FreshFlow POS - Expiry-Aware Inventory and Waste Reduction System for Retail Convenience Stores",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "backend": "npm --prefix backend start",
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "start": "run-all.bat"
+  },
+  "keywords": [
+    "pos",
+    "fefo",
+    "inventory-management",
+    "waste-reduction",
+    "expiry-aware"
+  ],
+  "author": "CodeConnect Team",
+  "license": "ISC"
+}
