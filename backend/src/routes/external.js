@@ -82,13 +82,14 @@ router.get('/barcode/:barcode', requireAuth, async (req, res) => {
     });
 
     if (!data || data.status !== 1 || !data.product) {
+      console.error(`[External API] Barcode ${cleanBarcode} not found in Open Food Facts registry`);
       logAudit({
         userId: req.user.id,
         role: req.user.role,
         action: 'EXTERNAL_BARCODE_LOOKUP',
         affectedTable: 'OpenFoodFacts',
         affectedId: cleanBarcode,
-        result: 'SUCCESS',
+        result: 'FAILURE',
         errorInfo: 'Barcode not found in registry',
       });
 
