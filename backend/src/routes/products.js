@@ -41,6 +41,22 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // ── POST /api/products ───────────────────────────────────────────────────────
+router.get('/barcode/:barcode', requireAuth, (req, res) => {
+  const barcode = req.params.barcode.trim();
+  if (!barcode || barcode.length > 64) {
+    return res.status(400).json({ error: 'Valid barcode is required' });
+  }
+
+  try {
+    const product = getDb().prepare('SELECT * FROM Products WHERE barcode = ?').get(barcode);
+    if (!product) return res.status(404).json({ error: 'Barcode not found in FreshFlow' });
+    return res.json({ product });
+  } catch (err) {
+    console.error('[Products] GET /barcode error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.post('/', requireManager, validate(['name', 'category', 'unit_price']), (req, res) => {
   const { name, category, unit_price, barcode } = req.body;
 

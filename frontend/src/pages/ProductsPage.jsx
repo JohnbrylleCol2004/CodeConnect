@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { resolveBarcodeLookup } from '../utils/barcodeLookup';
 
 const PAGE_SIZE = 10;
 
@@ -26,7 +27,8 @@ export default function ProductsPage() {
   const [barcodeResult, setBarcodeResult] = useState(null);
 
   const handleBarcodeLookup = async () => {
-    if (!form.barcode || !form.barcode.trim()) {
+    const barcode = form.barcode.trim();
+    if (!barcode) {
       setFormMsg({ type: 'error', text: 'Please enter a barcode number first to lookup.' });
       return;
     }
@@ -34,32 +36,26 @@ export default function ProductsPage() {
     setBarcodeResult(null);
     setFormMsg(null);
     try {
-      const res = await api.get(`/external/barcode/${encodeURIComponent(form.barcode.trim())}`);
-      if (res.data && res.data.found) {
-        setForm((prev) => ({
+      const [local, external] = await Promise.allSettled([
+        api.get(`/products/barcode/${encodeURIComponent(barcode)}`),
+        api.get(`/external/barcode/${encodeURIComponent(barcode)}`),
+      ]);
+      const result = resolveBarcodeLookup(local, external);
+      setBarcodeResult({ barcode, ...result });
+      if (result.fill) {
+        setForm((prev) => prev.barcode.trim() === barcode ? {
           ...prev,
-          name: res.data.name || prev.name,
-          category: res.data.category || prev.category,
-        }));
-        setBarcodeResult({
-          type: 'success',
-          data: res.data,
-        });
-      } else {
-        setBarcodeResult({
-          type: 'info',
-          message: res.data?.message || 'Barcode not found in Open Food Facts registry. You can enter details manually.',
-        });
+          name: result.fill.name || prev.name,
+          category: result.fill.category || prev.category,
+          unit_price: result.local.status === 'found' ? result.fill.unit_price : prev.unit_price,
+        } : prev);
       }
-    } catch (err) {
-      setBarcodeResult({
-        type: 'error',
-        message: err.response?.data?.error || err.response?.data?.detail || 'Failed to query Open Food Facts API.',
-      });
     } finally {
       setLookingUpBarcode(false);
     }
   };
+
+  const existingProduct = barcodeResult?.barcode === form.barcode.trim() && barcodeResult?.local.status === 'found';
 
   // ── Products state ──
   const [products, setProducts] = useState([]);
@@ -95,6 +91,7 @@ export default function ProductsPage() {
   // ── Add Product ──
   async function handleSubmit(e) {
     e.preventDefault();
+    if (existingProduct) return;
     setSubmitting(true);
     setFormMsg(null);
     try {
@@ -273,7 +270,7 @@ export default function ProductsPage() {
                     <input
                       style={{ ...s.input, flex: 1 }} type="text"
                       value={form.barcode}
-                      onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+                      onChange={(e) => { setForm({ ...form, barcode: e.target.value }); setBarcodeResult(null); }}
                       placeholder="e.g. 5449000000996"
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeLookup(); } }}
                     />
@@ -281,7 +278,7 @@ export default function ProductsPage() {
                       type="button"
                       onClick={handleBarcodeLookup}
                       disabled={lookingUpBarcode}
-                      title="Fetch product name and category from Open Food Facts API"
+                      title="Check this barcode in FreshFlow and Open Food Facts"
                       style={{
                         padding: '8px 12px',
                         background: '#e8f5e9',
@@ -294,14 +291,28 @@ export default function ProductsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {lookingUpBarcode ? '🔍 Looking up…' : '🌐 Auto-Fill (API)'}
+                      {lookingUpBarcode ? 'Looking up…' : 'Check / Auto-Fill'}
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* ── Open Food Facts API Result Preview Banner ── */}
-              {barcodeResult && barcodeResult.type === 'success' && (
+              {barcodeResult?.local.status === 'found' && (
+                <div style={{ background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '6px', padding: '12px 16px', marginBottom: '12px', fontSize: '13px' }}>
+                  <strong>Saved in FreshFlow:</strong> {barcodeResult.local.product.name} &bull; Category: {barcodeResult.local.product.category} &bull; Price: {formatPrice(barcodeResult.local.product.unit_price)}
+                  <div>This barcode is already registered. It cannot be added again.</div>
+                </div>
+              )}
+              {barcodeResult?.local.status === 'missing' && (
+                <div style={{ background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '6px', padding: '10px 14px', marginBottom: '12px', fontSize: '13px' }}>
+                  FreshFlow: No saved product has this barcode.
+                </div>
+              )}
+              {barcodeResult?.local.status === 'error' && (
+                <div style={s.msg('error')}>FreshFlow lookup failed: {barcodeResult.local.message}</div>
+              )}
+              {barcodeResult?.external.status === 'found' && (
                 <div style={{
                   background: '#f1f8e9',
                   border: '1px solid #c5e1a5',
@@ -312,20 +323,20 @@ export default function ProductsPage() {
                   alignItems: 'center',
                   gap: '14px',
                 }}>
-                  {barcodeResult.data.imageUrl && (
+                  {barcodeResult.external.product.imageUrl && (
                     <img
-                      src={barcodeResult.data.imageUrl}
+                      src={barcodeResult.external.product.imageUrl}
                       alt="Thumbnail"
                       style={{ width: '48px', height: '48px', objectFit: 'contain', background: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}
                     />
                   )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#2e7d32' }}>
-                      🌐 Verified by Open Food Facts Global API
+                      Found in Open Food Facts
                     </div>
                     <div style={{ fontSize: '13px', color: '#333', marginTop: '2px' }}>
-                      <strong>{barcodeResult.data.name}</strong> &bull; Category: <em>{barcodeResult.data.category}</em>
-                      {barcodeResult.data.brand && <span> &bull; Brand: {barcodeResult.data.brand}</span>}
+                      <strong>{barcodeResult.external.product.name}</strong> &bull; Category: <em>{barcodeResult.external.product.category}</em>
+                      {barcodeResult.external.product.brand && <span> &bull; Brand: {barcodeResult.external.product.brand}</span>}
                     </div>
                   </div>
                   <span style={{ fontSize: '11px', color: '#689f38', fontWeight: 'bold', background: '#dcedc8', padding: '3px 8px', borderRadius: '10px' }}>
@@ -334,22 +345,28 @@ export default function ProductsPage() {
                 </div>
               )}
 
-              {barcodeResult && barcodeResult.type !== 'success' && (
+              {barcodeResult && barcodeResult.external.status !== 'found' && (
                 <div style={{
-                  background: barcodeResult.type === 'error' ? '#ffebee' : '#fff9c4',
-                  border: `1px solid ${barcodeResult.type === 'error' ? '#ffcdd2' : '#fff59d'}`,
-                  color: barcodeResult.type === 'error' ? '#c62828' : '#827717',
+                  background: barcodeResult.external.status === 'error' ? '#ffebee' : '#fff9c4',
+                  border: `1px solid ${barcodeResult.external.status === 'error' ? '#ffcdd2' : '#fff59d'}`,
+                  color: barcodeResult.external.status === 'error' ? '#c62828' : '#827717',
                   borderRadius: '6px',
                   padding: '10px 14px',
                   marginBottom: '16px',
                   fontSize: '13px',
                 }}>
-                  {barcodeResult.type === 'error' ? '⚠️ ' : 'ℹ️ '} {barcodeResult.message}
+                  Open Food Facts: {barcodeResult.external.message || 'Product not found in registry.'}
                 </div>
               )}
 
-              <button style={s.submitBtn} type="submit" disabled={submitting}>
-                {submitting ? 'Adding…' : '+ Add Product'}
+              {barcodeResult?.mismatch && (
+                <div style={{ background: '#fff3cd', border: '1px solid #ffdf80', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
+                  The saved product and Open Food Facts have different names for this barcode. Review the barcode before using it.
+                </div>
+              )}
+
+              <button style={s.submitBtn} type="submit" disabled={submitting || existingProduct}>
+                {existingProduct ? 'Already registered' : submitting ? 'Adding…' : '+ Add Product'}
               </button>
               {formMsg && <div style={s.msg(formMsg.type)}>{formMsg.text}</div>}
             </form>

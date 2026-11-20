@@ -18,12 +18,13 @@ delete process.env.FRESHFLOW_DEMO_API_FAILURE;
 const { initDatabase, getDb } = require('../src/db/database');
 const externalRoutes = require('../src/routes/external');
 
-test('barcode lookup does not classify chocolate as cola', async () => {
+test('barcode lookup categorizes products and reports missing barcodes', async () => {
   await initDatabase();
   const db = getDb();
   const manager = db.prepare("SELECT id FROM Users WHERE role = 'manager' LIMIT 1").get();
   const token = jwt.sign({ id: manager.id, role: 'manager' }, process.env.JWT_SECRET);
   const originalGet = https.get;
+  let registryStatus = 1;
   https.get = (_url, _options, callback) => {
     const request = new EventEmitter();
     request.setTimeout = () => request;
@@ -32,7 +33,7 @@ test('barcode lookup does not classify chocolate as cola', async () => {
       response.statusCode = 200;
       callback(response);
       response.emit('data', JSON.stringify({
-        status: 1,
+        status: registryStatus,
         product: {
           product_name: 'Nutella',
           brands: 'Ferrero',
@@ -56,6 +57,16 @@ test('barcode lookup does not classify chocolate as cola', async () => {
     assert.equal(body.found, true);
     assert.equal(body.name, 'Ferrero - Nutella');
     assert.equal(body.category, 'Snacks');
+
+    registryStatus = 0;
+    const missing = await fetch(`http://127.0.0.1:${server.address().port}/api/external/barcode/9999999999999`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(missing.status, 404);
+    assert.deepEqual(await missing.json(), {
+      error: 'Product not found in Open Food Facts registry',
+      barcode: '9999999999999',
+    });
   } finally {
     await new Promise(resolve => server.close(resolve));
     https.get = originalGet;

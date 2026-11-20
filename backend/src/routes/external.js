@@ -92,10 +92,9 @@ router.get('/barcode/:barcode', requireAuth, async (req, res) => {
         errorInfo: 'Barcode not found in registry',
       });
 
-      return res.json({
-        found: false,
+      return res.status(404).json({
+        error: 'Product not found in Open Food Facts registry',
         barcode: cleanBarcode,
-        message: 'Product not found in Open Food Facts registry',
       });
     }
 
